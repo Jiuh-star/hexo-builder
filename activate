@@ -1,0 +1,19 @@
+#!/bin/bash
+
+IMAGE_NAME="hexo-butterfly"
+CONTAINER_NAME="hexo-butterfly"
+
+if [[ -z "$(podman ps -a | grep $CONTAINER_NAME)" ]]; then
+    # Create a container
+    podman run -it -d --name $CONTAINER_NAME -p 4000:4000 \
+      -v $PWD/_config.yml:/root/hexo/_config.yml \
+      -v $PWD/_config.butterfly.yml:/root/hexo/_config.butterfly.yml \
+      -v $PWD/scaffolds:/root/hexo/scaffolds \
+      -v $PWD/source:/root/hexo/source \
+      $IMAGE_NAME /bin/bash
+else
+    podman start -i $CONTAINER_NAME
+fi
+
+alias hexo="podman exec -it $CONTAINER_NAME hexo"
+
