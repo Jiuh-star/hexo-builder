@@ -86,7 +86,7 @@ buildah run $container -- rm -r themes/landscape
 # For easy update
 buildah run $container cp /root/hexo/themes/butterfly/_config.yml /root/hexo/_config.butterfly.yml
 
-# Volume point
+# Template and working directories
 cp -i -b $mnt/root/hexo/_config.yml $PWD/_config.yml
 cp -i -b $mnt/root/hexo/_config.butterfly.yml $PWD/_config.butterfly.yml
 cp -i -r $mnt/root/hexo/scaffolds/ $PWD/scaffolds/
