@@ -3,8 +3,7 @@
 # Generator: Hexo
 # Theme: Butterfly
 
-# set -ex
-set -e
+set -ex
 
 # Run in unshare mode
 if [ "$(id -u)" -ne 0 ]; then
