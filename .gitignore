@@ -1,5 +1,4 @@
-scaffolds
-source
-_config.yml
-_config.butterfly.yml
-
+hexo/
+qexo/
+twikoo/
+var/

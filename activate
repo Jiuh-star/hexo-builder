@@ -1,28 +1,77 @@
 #!/bin/bash
 
-IMAGE_NAME="hexo-butterfly"
-CONTAINER_NAME="hexo-butterfly"
+export BLOG_IMAGE_NAME="hexo-blog"
+export BLOG_CONTAINER_NAME="hexo-blog"
 
-if [[ -z "$(podman ps -a | grep $CONTAINER_NAME)" ]]; then
+HEXO_PORT=4000
+QEXO_PORT=4001
+TWIKOO_PORT=4002
+
+
+if [[ -z "$(podman ps -a | grep $BLOG_CONTAINER_NAME)" ]]; then
     # Create a container
-    podman run -it -d --name $CONTAINER_NAME -p 4000:4000 \
-      -v $PWD/_config.yml:/root/hexo/_config.yml \
-      -v $PWD/_config.butterfly.yml:/root/hexo/_config.butterfly.yml \
-      -v $PWD/scaffolds:/root/hexo/scaffolds \
-      -v $PWD/source:/root/hexo/source \
-      $IMAGE_NAME /bin/bash
+    podman run -it -d --name $BLOG_CONTAINER_NAME \
+        -p $HEXO_PORT:4000 \
+	-p $QEXO_PORT:4001 \
+	-p $TWIKOO_PORT:4002 \
+        -v $PWD/hexo/_config.yml:/root/hexo/_config.yml \
+        -v $PWD/hexo/_config.butterfly.yml:/root/hexo/_config.butterfly.yml \
+        -v $PWD/hexo/scaffolds:/root/hexo/scaffolds \
+        -v $PWD/hexo/source:/root/hexo/source \
+	-v $PWD/qexo/db.sqlite3:/root/qexo/db.sqlite3:rw \
+	-v $PWD/twikoo:/root/twikoo/data \
+        $BLOG_IMAGE_NAME /bin/bash
 else
-    podman start -i $CONTAINER_NAME
+    podman start -i $BLOG_CONTAINER_NAME
 fi
 
 
-function restart-hexo() 
+function restart-hexo-container() 
 {
-    podman stop $CONTAINER_NAME
-    podman rm $CONTAINER_NAME
-    source $BASH_SOURCE
+    podman stop $BLOG_CONTAINER_NAME
+    podman start -i $BLOG_CONTAINER_NAME
 }
 
+function run-hexo-server()
+{
+    podman exec -it --workdir /root/hexo $BLOG_CONTAINER_NAME hexo server -p 4000
+}
 
-alias hexo="podman exec -it $CONTAINER_NAME hexo"
+function run-qexo-server()
+{
+    podman exec -it --workdir /root/qexo $BLOG_CONTAINER_NAME /root/qexo/venv/bin/python3 manage.py runserver 0.0.0.0:4001 --noreload
+}
+
+function run-twikoo-server()
+{
+    podman exec -it --workdir /root/twikoo --env TWIKOO_PORT=4002 $BLOG_CONTAINER_NAME node_modules/.bin/tkserver
+}
+
+function start-blog-server()
+{
+    export -f run-hexo-server
+    export -f run-qexo-server
+    export -f run-twikoo-server
+
+    mkdir -p var
+
+    echo "Starting Hexo Server"
+    nohup bash -c run-hexo-server >> var/hexo.log 2>&1 &
+
+    echo "Starting Qexo Server"
+    nohup bash -c run-qexo-server >> var/qexo.log 2>&1 &
+
+    echo "Starting Twikoo Server"
+    nohup bash -c run-twikoo-server >> var/twikoo.log 2>&1 &
+    echo "Done"
+}
+
+function restart-blog-server()
+{
+    podman stop $BLOG_CONTAINER_NAME
+    podman start -i $BLOG_CONTAINER_NAME
+    start-blog-server
+}
+
+alias hexo="podman exec -it --workdir /root/hexo $BLOG_CONTAINER_NAME hexo"
 
