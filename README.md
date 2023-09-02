@@ -20,10 +20,16 @@ chmod +x build.sh
 # Some volume point generated at $PWD
 # Modified _config.yml and _config.butterfly.yml to finish your configuration
 
-# Create a new container & make an alias
+# Create a new container if not exists & make some management commands
 source activate
 
-# Generate, deploy & run at http://localhost:4000
-hexo generate -d
-hexo serve
+# Generate, deploy & run Hexo at http://localhost:4000, Qexo at 4001,
+# Twikoo at 4002 by default. Logging are saved at var/
+start-blog-server
+
+# Restart blog server if config file changed
+restart-blog-server
+
+# You can run a single server in foreground for debugging
+run-hexo-server
 ```
