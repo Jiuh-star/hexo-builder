@@ -68,7 +68,7 @@ function start-blog-server()
 
 function restart-blog-server()
 {
-    podman stop $BLOG_CONTAINER_NAME
+    podman kill $BLOG_CONTAINER_NAME
     podman start -i $BLOG_CONTAINER_NAME
     start-blog-server
 }
